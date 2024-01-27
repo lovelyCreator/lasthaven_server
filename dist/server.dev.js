@@ -8,7 +8,10 @@ var dotenv = require("dotenv");
 
 var bodyParser = require("body-parser");
 
+var fileUpload = require('express-fileupload');
+
 var app = express();
+app.use(fileUpload());
 
 require("./app/socketServer"); // require("./app/walletavatar")
 
@@ -57,7 +60,8 @@ require("./app/routes/ticket.routes")(app);
 
 require("./app/routes/buyTickets.routes")(app);
 
-require("./app/routes/chat.routes")(app); // set port, listen for requests
+require("./app/routes/chat.routes")(app); // require("./app/routes/image.routes")(app);
+// set port, listen for requests
 
 
 var PORT = process.env.PORT || 3001;

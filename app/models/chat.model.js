@@ -4,6 +4,7 @@ module.exports = mongoose => {
         id: String,
         userName: String,
         avatar: String,
+        image: String,
         message: String,
         timestamp: Date,
         readed: [String]

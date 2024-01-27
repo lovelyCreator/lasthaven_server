@@ -109,8 +109,108 @@ io.on('connection', (socket) => {
     // console.log('us', updateUser);
   });
 //-----------------message------------------
-  socket.on('message', (message) => {
-    console.log('New message:', message);
+  socket.on('message', async (message) => {
+    
+    // let messageData;
+
+    // if (message.message instanceof FormData) {
+    //   // Handle FormData message
+    //   const file = message.get('file');
+    //   const fileUrl = await uploadFileToStorage(file);
+    //   messageData = { fileUrl };
+    // } else {
+    //   // Handle string message
+    //   messageData = { text: message };
+    // }
+
+    // await Message.create(messageData);
+    // console.log('New message:', message);
+    const read = [];
+    const ids = mongoose.Types.ObjectId();
+    ChatUser.aggregate([
+      { 
+        $match: { logined: true } 
+      },
+      {
+        $project: { 
+          _id: 0, 
+          username: 1,
+          avatar: 1
+        }
+      }
+    ], function (err, result) {
+      if (err) {
+        // Handle error
+      } else {
+        // console.log(result);
+        // Process the result
+        result.map((item, index)=> {
+          // console.log(message.username);
+          if(item.username != message.username) read.push(item.username)
+        })
+        console.log(message.username, message.message);
+        const newMessage = new Chat({
+          id: ids,
+          userName: message.username,
+          avatar: message.avatar,
+          message: message.message,
+          image: message.image,
+          timestamp: new Date(), // Save the current server time to the database
+          readed: read
+        });
+        newMessage.save().then((data) => {
+          console.log('Successfully Created!');
+        });
+        
+        // const messages = Chat.find({});
+        io.emit('message', newMessage);
+      }
+    });
+    ChatUser.aggregate([
+      { 
+        $match: { logined: false } 
+      },
+      {
+        $project: { 
+          _id: 0, 
+          username: 1,
+          unreadmsg: 2
+        }
+      }
+    ], function (err, result) {
+      if (err) {
+        // Handle error
+      } else {
+        // console.log(result);
+        // Process the result
+        result.map(async(item, index)=> {
+        // console.log(message.username);        
+          const filter = { username: item.username };
+          const update = { unreadmsg: [...item.unreadmsg, ids ] };
+          const users = await ChatUser.updateOne(filter, update);
+          // const updateUser = ChatUser.updateOne({ username: item.username }, { $push: { unreadmsg: message._id } })
+          const user = await ChatUser.findOne({username: item.username});
+          io.emit('Alert', {walletAddress: user.walletAddress, alert: user.unreadmsg.length});
+        
+        console.log('up', user);
+      })
+      // // console.log(read);
+      // const newMessage = new Chat({
+      //   userName: message.username,
+      //   message: message.message,
+      //   timestamp: new Date(), // Save the current server time to the database
+      //   readed: read
+      // });
+      // newMessage.save();
+      // // const messages = Chat.find({});
+      // io.emit('message', newMessage);
+      }
+    });
+    // console.log('message: ', message);
+    
+  });
+  
+  socket.on('upload', (message) => {
     const read = [];
     const ids = mongoose.Types.ObjectId();
     ChatUser.aggregate([
@@ -189,10 +289,7 @@ io.on('connection', (socket) => {
       // io.emit('message', newMessage);
       }
     });
-    // console.log('message: ', message);
-    
-  });
-  
+  })
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');

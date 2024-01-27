@@ -2,8 +2,11 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
+const fileUpload = require('express-fileupload');
+
 const app = express();
 
+app.use(fileUpload());
 require("./app/socketServer");
 // require("./app/walletavatar")
 
@@ -48,6 +51,7 @@ require("./app/routes/user.routes")(app);
 require("./app/routes/ticket.routes")(app);
 require("./app/routes/buyTickets.routes")(app);
 require("./app/routes/chat.routes")(app);
+// require("./app/routes/image.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 3001;

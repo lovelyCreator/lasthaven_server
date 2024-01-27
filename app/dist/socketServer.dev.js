@@ -287,8 +287,136 @@ io.on('connection', function (socket) {
     });
   }); //-----------------message------------------
 
-  socket.on('message', function (message) {
-    console.log('New message:', message);
+  socket.on('message', function _callee8(message) {
+    var read, ids;
+    return regeneratorRuntime.async(function _callee8$(_context8) {
+      while (1) {
+        switch (_context8.prev = _context8.next) {
+          case 0:
+            // let messageData;
+            // if (message.message instanceof FormData) {
+            //   // Handle FormData message
+            //   const file = message.get('file');
+            //   const fileUrl = await uploadFileToStorage(file);
+            //   messageData = { fileUrl };
+            // } else {
+            //   // Handle string message
+            //   messageData = { text: message };
+            // }
+            // await Message.create(messageData);
+            // console.log('New message:', message);
+            read = [];
+            ids = mongoose.Types.ObjectId();
+            ChatUser.aggregate([{
+              $match: {
+                logined: true
+              }
+            }, {
+              $project: {
+                _id: 0,
+                username: 1,
+                avatar: 1
+              }
+            }], function (err, result) {
+              if (err) {// Handle error
+              } else {
+                // console.log(result);
+                // Process the result
+                result.map(function (item, index) {
+                  // console.log(message.username);
+                  if (item.username != message.username) read.push(item.username);
+                });
+                console.log(message.username, message.message);
+                var newMessage = new Chat({
+                  id: ids,
+                  userName: message.username,
+                  avatar: message.avatar,
+                  message: message.message,
+                  image: message.image,
+                  timestamp: new Date(),
+                  // Save the current server time to the database
+                  readed: read
+                });
+                newMessage.save().then(function (data) {
+                  console.log('Successfully Created!');
+                }); // const messages = Chat.find({});
+
+                io.emit('message', newMessage);
+              }
+            });
+            ChatUser.aggregate([{
+              $match: {
+                logined: false
+              }
+            }, {
+              $project: {
+                _id: 0,
+                username: 1,
+                unreadmsg: 2
+              }
+            }], function (err, result) {
+              if (err) {// Handle error
+              } else {
+                // console.log(result);
+                // Process the result
+                result.map(function _callee7(item, index) {
+                  var filter, update, users, user;
+                  return regeneratorRuntime.async(function _callee7$(_context7) {
+                    while (1) {
+                      switch (_context7.prev = _context7.next) {
+                        case 0:
+                          // console.log(message.username);        
+                          filter = {
+                            username: item.username
+                          };
+                          update = {
+                            unreadmsg: [].concat(_toConsumableArray(item.unreadmsg), [ids])
+                          };
+                          _context7.next = 4;
+                          return regeneratorRuntime.awrap(ChatUser.updateOne(filter, update));
+
+                        case 4:
+                          users = _context7.sent;
+                          _context7.next = 7;
+                          return regeneratorRuntime.awrap(ChatUser.findOne({
+                            username: item.username
+                          }));
+
+                        case 7:
+                          user = _context7.sent;
+                          io.emit('Alert', {
+                            walletAddress: user.walletAddress,
+                            alert: user.unreadmsg.length
+                          });
+                          console.log('up', user);
+
+                        case 10:
+                        case "end":
+                          return _context7.stop();
+                      }
+                    }
+                  });
+                }); // // console.log(read);
+                // const newMessage = new Chat({
+                //   userName: message.username,
+                //   message: message.message,
+                //   timestamp: new Date(), // Save the current server time to the database
+                //   readed: read
+                // });
+                // newMessage.save();
+                // // const messages = Chat.find({});
+                // io.emit('message', newMessage);
+              }
+            }); // console.log('message: ', message);
+
+          case 4:
+          case "end":
+            return _context8.stop();
+        }
+      }
+    });
+  });
+  socket.on('upload', function (message) {
     var read = [];
     var ids = mongoose.Types.ObjectId();
     ChatUser.aggregate([{
@@ -340,11 +468,11 @@ io.on('connection', function (socket) {
       } else {
         // console.log(result);
         // Process the result
-        result.map(function _callee7(item, index) {
+        result.map(function _callee9(item, index) {
           var filter, update, users, user;
-          return regeneratorRuntime.async(function _callee7$(_context7) {
+          return regeneratorRuntime.async(function _callee9$(_context9) {
             while (1) {
-              switch (_context7.prev = _context7.next) {
+              switch (_context9.prev = _context9.next) {
                 case 0:
                   // console.log(message.username);        
                   filter = {
@@ -353,18 +481,18 @@ io.on('connection', function (socket) {
                   update = {
                     unreadmsg: [].concat(_toConsumableArray(item.unreadmsg), [ids])
                   };
-                  _context7.next = 4;
+                  _context9.next = 4;
                   return regeneratorRuntime.awrap(ChatUser.updateOne(filter, update));
 
                 case 4:
-                  users = _context7.sent;
-                  _context7.next = 7;
+                  users = _context9.sent;
+                  _context9.next = 7;
                   return regeneratorRuntime.awrap(ChatUser.findOne({
                     username: item.username
                   }));
 
                 case 7:
-                  user = _context7.sent;
+                  user = _context9.sent;
                   io.emit('Alert', {
                     walletAddress: user.walletAddress,
                     alert: user.unreadmsg.length
@@ -373,7 +501,7 @@ io.on('connection', function (socket) {
 
                 case 10:
                 case "end":
-                  return _context7.stop();
+                  return _context9.stop();
               }
             }
           });
@@ -388,7 +516,7 @@ io.on('connection', function (socket) {
         // // const messages = Chat.find({});
         // io.emit('message', newMessage);
       }
-    }); // console.log('message: ', message);
+    });
   });
   socket.on('disconnect', function () {
     console.log('Client disconnected');

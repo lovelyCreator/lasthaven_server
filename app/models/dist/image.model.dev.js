@@ -9,7 +9,6 @@ module.exports = function (mongoose) {
     id: String,
     userName: String,
     avatar: String,
-    image: String,
     message: String,
     timestamp: Date,
     readed: [String]
@@ -28,4 +27,4 @@ module.exports = function (mongoose) {
   var Chat = mongoose.model("chat", schema);
   return Chat;
 };
-//# sourceMappingURL=chat.model.dev.js.map
+//# sourceMappingURL=image.model.dev.js.map
